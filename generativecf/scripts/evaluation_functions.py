@@ -1,9 +1,9 @@
-#Important Import
+# Important Import
 from scripts.vae_model import CF_VAE
 from scripts.vae_model import AutoEncoder
 # from scripts.vae_model_sangiovese import CF_VAE as CF_VAE_BN
 
-#Normie stuff
+# Normie stuff
 import sys
 import random
 import pandas as pd
@@ -12,7 +12,7 @@ import json
 import argparse
 import matplotlib.pyplot as plt
 
-#Pytorch
+# Pytorch
 import torch
 import torch.utils.data
 from torch import nn, optim
@@ -58,21 +58,26 @@ def nll(y_true, y_pred):
     # keras.losses.binary_crossentropy gives the mean
     # over the last axis. we require the sum
     return K.sum(keras.losses.mean_squared_error(y_true, y_pred), axis=-1)
-    
+
+
 def de_normalise( x, normalise_weights ):
     return (normalise_weights[1] - normalise_weights[0])*x + normalise_weights[0]
+
 
 def de_scale( x, normalise_weights ):
     return (normalise_weights[1] - normalise_weights[0])*x
 
+
 def normal_likelihood(x, mean, logvar, raxis=1):
     return torch.sum( -.5 * ((x - mean)*(1./logvar)*(x-mean) + torch.log(logvar) ), axis=1)
+
 
 def change_direction( x_true, x_pred, idx, key, offset ):        
     if x_pred.iloc[idx, key] - offset > x_true.iloc[idx, key]:
         return 1
     elif x_pred.iloc[idx, key] + offset < x_true.iloc[idx, key]:
         return 0    
+
 
 def visualize_score(model, pred_model, train_dataset, d):
         
@@ -91,6 +96,7 @@ def visualize_score(model, pred_model, train_dataset, d):
             x_true= d.de_normalize_data( d.get_decoded_data(x_true.detach().numpy()) )                
 
             print(x_pred)
+
 
 def contrastive_validity_score(contrastive_exp, case, sample_range):
         
@@ -117,9 +123,10 @@ def contrastive_validity_score(contrastive_exp, case, sample_range):
         plt.ylabel('Percentage of CF')
         plt.show()
     print('Mean Validity Score: ', np.mean(np.array(validity_score_arr)) )
-#     if total_test_size < 3*90:
-#         validity_score_arr= 0*validity_score_arr
+    # if total_test_size < 3*90:
+        # validity_score_arr= 0*validity_score_arr
     return validity_score_arr
+
 
 def contrastive_proximity_score(contrastive_exp, d, mad_feature_weights, cat, case, sample_range):
     
@@ -159,6 +166,7 @@ def contrastive_proximity_score(contrastive_exp, d, mad_feature_weights, cat, ca
         plt.show()
     print('Mean Proximity Score: ', np.mean(np.array(prox_score_arr)) )
     return prox_score_arr
+
 
 def contrastive_causal_score_age_ed_constraint(contrastive_exp, d, normalise_weights, offset, case, sample_range):
         
@@ -213,7 +221,7 @@ def contrastive_causal_score_age_ed_constraint(contrastive_exp, d, normalise_wei
         valid_change= valid_change/sample_size
         invalid_change= invalid_change/sample_size
         
-#         test_size= len(exp_res)
+        # test_size= len(exp_res)
         test_size= test_size/sample_size
         print('Test Size: ', test_size)    
         valid_score_arr.append( 100*valid_change/test_size )
@@ -272,7 +280,7 @@ def contrastive_causal_score_age_constraint(contrastive_exp, d, normalise_weight
         valid_change= valid_change/sample_size
         invalid_change= invalid_change/sample_size
 
-#         test_size= len(exp_res)
+        # test_size= len(exp_res)
         test_size= test_size/sample_size
         valid_score_arr.append( 100*valid_change/test_size )
         invalid_score_arr.append( 100*invalid_change/test_size )
@@ -291,6 +299,7 @@ def contrastive_causal_score_age_constraint(contrastive_exp, d, normalise_weight
         plt.show()    
     print('Mean Age Constraint Score: ', valid_score, invalid_score, valid_score/(valid_score+invalid_score))
     return valid_score_arr, invalid_score_arr
+
 
 def contrastive_causal_score_bn1_constraint(contrastive_exp, d, normalise_weights, offset, case, sample_range):
         
@@ -335,7 +344,7 @@ def contrastive_causal_score_bn1_constraint(contrastive_exp, d, normalise_weight
         valid_change_n= valid_change_n/sample_size
         invalid_change_n= invalid_change_n/sample_size
         
-#         print(sample_size, low_change, valid_high_change, invalid_high_change)
+        # print(sample_size, low_change, valid_high_change, invalid_high_change)
         test_size= len(exp_res)
         valid_score_p_arr.append( 100*valid_change_p/test_size )
         invalid_score_p_arr.append( 100*invalid_change_p/test_size )
@@ -395,6 +404,7 @@ def contrastive_distribution_score( contrastive_exp, d, normalise_weights, case,
         plt.show()    
     print('Mean Distribution Constraint Score: ', np.mean(np.array(score_arr)))
     return score_arr
+
 
 def contrastive_causal_graph_score( contrastive_exp, d, normalise_weights, case, sample_range):
 
@@ -556,6 +566,7 @@ def contrastive_bnlearn_causal_graph_score( contrastive_exp, d, normalise_weight
     print( title, ': ', np.mean(np.array(score_arr)))
     return score_arr
 
+
 def ae_reconstruct_loss_cem_im( model, x, dataset_name, normalise_weights ): 
     
     #Reconstruction Term
@@ -570,6 +581,7 @@ def ae_reconstruct_loss_cem_im( model, x, dataset_name, normalise_weights ):
         recon_err+= -(normalise_weights[key][1] - normalise_weights[key][0])*((x[:,key] - x_pred[:,key])**2) 
 
     return -recon_err 
+
 
 def contrastive_im_score(contrastive_exp, d, normalise_weights, ae_models, dataset_name, div_case, case, sample_range):
         
@@ -693,6 +705,7 @@ def validity_score(model, pred_model, train_dataset, case, sample_range):
     print('Mean Validity Score: ', np.mean(np.array(validity_score_arr)) )
     return validity_score_arr
 
+
 def proximity_score(model, pred_model, train_dataset, d, mad_feature_weights, cat, case, sample_range):
     
     prox_score_arr=[]
@@ -705,13 +718,13 @@ def proximity_score(model, pred_model, train_dataset, d, mad_feature_weights, ca
             
             x_pred= d.de_normalize_data( d.get_decoded_data(x_pred.detach().numpy()) )
             x_true= d.de_normalize_data( d.get_decoded_data(x_true.detach().numpy()) )                
-#             x_pred= d.get_decoded_data(x_pred.detach().numpy()) 
-#             x_true= d.get_decoded_data(x_true.detach().numpy())                 
+            # x_pred= d.get_decoded_data(x_pred.detach().numpy()) 
+            # x_true= d.get_decoded_data(x_true.detach().numpy())                 
             if cat:
                 for column in d.categorical_feature_names:
-#                     print(column, x_true[column].shape, x_pred[column].shape)
-#                     for di in range(x_true[column].shape[0]):
-#                         print(len(x_true[column][di]), len(x_pred[column][di]))
+                    # print(column, x_true[column].shape, x_pred[column].shape)
+                    # for di in range(x_true[column].shape[0]):
+                    #     print(len(x_true[column][di]), len(x_pred[column][di]))
                     prox_count += np.sum( np.array(x_true[column], dtype=pd.Series) != np.array(x_pred[column], dtype=pd.Series ))
             else:
                 for column in d.continuous_feature_names:
@@ -719,7 +732,7 @@ def proximity_score(model, pred_model, train_dataset, d, mad_feature_weights, ca
                     
         test_size= train_x.shape[0]
         prox_count= prox_count/sample_size
-#         print(sample_size, prox_count)
+        # print(sample_size, prox_count)
         prox_score_arr.append( -1*prox_count/test_size )
 
     if case:
@@ -763,7 +776,7 @@ def diversity_score(model, pred_model, train_dataset, d, mad_feature_weights, ca
                 
         test_size= train_x.shape[0]
         divr_count= divr_count/(sample_size**2)
-#         print(sample_size, divr_count)
+        # print(sample_size, divr_count)
         divr_score_arr.append( divr_count/test_size )
 
     plt.plot([1,2,6,8,10], divr_score_arr)
@@ -826,6 +839,7 @@ def bnlearn_scm_score( xpred, normalise_weights, d, scm_model, constraint_nodes,
     
     return torch.mean(score).detach().numpy()    
 
+
 def bnlearn_causal_graph_score(model, pred_model, train_dataset, normalise_weights, d, scm_model, constraint_nodes, constraint_case, plot_case, sample_range):
 
     score_arr=[]
@@ -855,7 +869,8 @@ def bnlearn_causal_graph_score(model, pred_model, train_dataset, normalise_weigh
         plt.show()    
     print( title, ': ', np.mean(np.array(score_arr)))
     return score_arr
-    
+
+
 def bnlearn_path_constraint_score(model, pred_model, train_dataset, d, scm_model, constraint_nodes, plot_case, sample_range):
         
     valid_score_arr=[]
@@ -1005,15 +1020,16 @@ def oracle_func_approx_score(model, x, normalise_weights):
 
 
 def oracle_score(x, normalise_weights):        
-#     mean= 10*(( w0*x[:,0]+w1*x[:,1])**2/180**2) + 10
-#     var= 0.5
-#     score= ((w2*x[:,2] - mean)*(1./var)*(w2*x[:,2]-mean) )
+    # mean= 10*(( w0*x[:,0]+w1*x[:,1])**2/180**2) + 10
+    # var= 0.5
+    # score= ((w2*x[:,2] - mean)*(1./var)*(w2*x[:,2]-mean) )
 
     mean= 10*( ( de_normalise(x[:,0], normalise_weights[0]) + de_normalise(x[:,1], normalise_weights[1]) )**2/180**2) + 10
     var= torch.zeros(x.shape[0],1).fill_(0.5)
     score= normal_likelihood( de_normalise(x[:,2], normalise_weights[2]), mean, var )
     
     return torch.mean(score).detach().numpy()
+
 
 def oracle_causal_graph_score(x, normalise_weights):
     
@@ -1030,6 +1046,7 @@ def oracle_causal_graph_score(x, normalise_weights):
     score= normal_likelihood( de_normalise(x[:,2], normalise_weights[2]), mean, var )
     
     return torch.mean(score).detach().numpy()
+
 
 def causal_graph_score(model,  pred_model, train_dataset, normalise_weights, case, sample_range):
 
@@ -1056,6 +1073,7 @@ def causal_graph_score(model,  pred_model, train_dataset, normalise_weights, cas
     print('Mean Causal Graph Score: ',np.mean(np.array(score_arr)))    
     return score_arr
 
+
 def distribution_score(model, pred_model, train_dataset, normalise_weights, case, sample_range):
 
     score_arr=[]
@@ -1081,6 +1099,7 @@ def distribution_score(model, pred_model, train_dataset, normalise_weights, case
         plt.show()    
     print('Mean Distribution Constraint Score: ', np.mean(np.array(score_arr)))
     return score_arr
+
 
 def func_approx_score(model, pred_model, train_dataset, normalise_weights, case, sample_range):
 
@@ -1150,7 +1169,7 @@ def causal_score(model, pred_model, train_dataset, d, normalise_weights, offset,
         valid_change_n= valid_change_p/sample_size
         invalid_change_n= invalid_change_p/sample_size
         
-#         print(sample_size, low_change, valid_high_change, invalid_high_change)
+        # print(sample_size, low_change, valid_high_change, invalid_high_change)
         test_size= train_x.shape[0]
     
         valid_score_p_arr.append( 100*valid_change_p/test_size )
@@ -1237,7 +1256,7 @@ def causal_score_age_ed_constraint(model, pred_model, train_dataset, d, normalis
         valid_change= valid_change/sample_size
         invalid_change= invalid_change/sample_size
         
-#         test_size= train_x.shape[0]
+        # test_size= train_x.shape[0]
         test_size= test_size/sample_size
         valid_score_arr.append( 100*valid_change/test_size )
         invalid_score_arr.append( 100*invalid_change/test_size )
@@ -1295,7 +1314,7 @@ def causal_score_age_constraint(model, pred_model, train_dataset, d, normalise_w
         valid_change= valid_change/sample_size
         invalid_change= invalid_change/sample_size
 
-#         test_size= train_x.shape[0]
+        # test_size= train_x.shape[0]
         test_size= test_size/sample_size
         valid_score_arr.append( 100*valid_change/test_size )
         invalid_score_arr.append( 100*invalid_change/test_size )
@@ -1315,6 +1334,7 @@ def causal_score_age_constraint(model, pred_model, train_dataset, d, normalise_w
     print('Mean Age Constraint Score: ', valid_score, invalid_score, valid_score/(valid_score+invalid_score))
     return valid_score_arr, invalid_score_arr
 
+
 def ae_reconstruct_loss_im( model, x, normalise_weights ): 
     
     if len(x.shape) == 1:
@@ -1330,12 +1350,13 @@ def ae_reconstruct_loss_im( model, x, normalise_weights ):
     #Reconstruction Term
     x_pred = dm[0]        
     s= model.encoded_start_cat
-#    s=0
+    # s=0
     recon_err = -torch.sum( (x[:,s:-1] - x_pred[:,s:-1])**2, dim=1 )
     for key in normalise_weights.keys():
         recon_err+= -(normalise_weights[key][1] - normalise_weights[key][0])*((x[:,key] - x_pred[:,key])**2) 
 
     return -recon_err 
+
 
 def im_score(model, pred_model, train_dataset, d, normalise_weights, ae_models, div_case, case, sample_range):
         
@@ -1723,29 +1744,30 @@ def compute_eval_metrics_adult( methods, base_model_dir, encoded_size, pred_mode
     
     return final_res
 
-def compute_eval_metrics_sangiovese( methods, base_model_dir, encoded_size, pred_model, val_dataset, d, normalise_weights, mad_feature_weights, scm_model, constraint_nodes,  div_case, case, sample_range, filename ):    
-    count=0
-    fsize=20
+
+def compute_eval_metrics_sangiovese( methods, base_model_dir, encoded_size, pred_model, val_dataset, d, normalise_weights, mad_feature_weights, scm_model, constraint_nodes,  div_case, case, sample_range, filename ):
+    count = 0
+    fsize = 20
     fig = plt.figure(figsize=(7.7,6.5))
-    final_res={}
-    dataset_name= 'sangiovese'
+    final_res = {}
+    dataset_name = 'sangiovese'
     
     np.random.shuffle(val_dataset)
-    x_sample= val_dataset[0,:]
-    x_sample= np.reshape( x_sample, (1, val_dataset.shape[1]))
+    x_sample = val_dataset[0,:]
+    x_sample = np.reshape( x_sample, (1, val_dataset.shape[1]))
     print('Input Data Sample: ', d.de_normalize_data( d.get_decoded_data(x_sample) ))
 
     # Loading all the Auto Encoder models
     auto_encoder_models= []
     for i in range(0,2):
-        ae= AutoEncoder(len(d.encoded_feature_names), encoded_size, d)
-        path=  'models/sangiovese-512-50-target-class-' + str(i) + '-auto-encoder.pth'
+        ae = AutoEncoder(len(d.encoded_feature_names), encoded_size, d)
+        path = 'models/sangiovese-512-50-target-class-' + str(i) + '-auto-encoder.pth'
         ae.load_state_dict(torch.load(path))
         ae.eval()
         auto_encoder_models.append(ae)        
         
     # Loading all the Auto Encoder for CEM
-    auto_encoder_models_cem= []
+    auto_encoder_models_cem = []
     for i in range(0,2):
         
         # load json and create model
@@ -1764,33 +1786,33 @@ def compute_eval_metrics_sangiovese( methods, base_model_dir, encoded_size, pred
     for key in methods.keys():
 
         #Loading torch model
-        wm1=1e-4
-        wm2=1e-3
-        wm3=1e-4
-        wm4=1e-3
+        wm1 = 1e-4
+        wm2 = 1e-3
+        wm3 = 1e-4
+        wm4 = 1e-3
         
-        path= methods[key]
-        cf_val=[]
+        path = methods[key]
+        cf_val = []
 
         if 'contrastive' in path and 'json' in path:
-            f=open(path,'r')
-            contrastive_exp= json.load(f)
+            f = open(path,'r')
+            contrastive_exp = json.load(f)
             f.close()
             for i in range(10):
-                if case==0:
+                if case == 0:
                     cf_val.append( contrastive_validity_score(contrastive_exp, 0, sample_range) )
-                elif case==1:
+                elif case == 1:
                     cf_val.append( contrastive_bnlearn_causal_graph_score( contrastive_exp, d, normalise_weights, scm_model, constraint_nodes, 1, 0, sample_range ) )
-                elif case==3:
+                elif case == 3:
                     val, inval= contrastive_causal_score_bnlearn_constraint(contrastive_exp, d, normalise_weights, offset, scm_model, constraint_nodes, 0, sample_range)
                     cf_val.append( 2*100*np.array(val)*np.array(inval)/(np.array(val)+np.array(inval)) )
-                elif case==4:
+                elif case == 4:
                     cf_val.append( contrastive_bnlearn_causal_graph_score( contrastive_exp, d, normalise_weights, scm_model, constraint_nodes, 0, 0, sample_range ) )                    
-                elif case==5:
+                elif case == 5:
                     cf_val.append( contrastive_proximity_score(contrastive_exp, d, mad_feature_weights, 0, 0, sample_range) )
-                elif case==6:
+                elif case == 6:
                     cf_val.append( contrastive_proximity_score(contrastive_exp, d, mad_feature_weights, 1, 0, sample_range) )
-                elif case==7:
+                elif case == 7:
                     cf_val.append( contrastive_im_score(contrastive_exp, d, normalise_weights, auto_encoder_models_cem, dataset_name, div_case, 0, sample_range) )                    
         else: 
             cf_vae = CF_VAE( len(d.encoded_feature_names), encoded_size, d )
@@ -1803,49 +1825,49 @@ def compute_eval_metrics_sangiovese( methods, base_model_dir, encoded_size, pred
                 {'params': filter(lambda p: p.requires_grad, cf_vae.decoder_mean.parameters()),'weight_decay': wm3}
             ], lr=learning_rate)       
 
-            cf_val=[]
+            cf_val = []
 
-            if case==-1:        
+            if case == -1:        
                 print('\n', 'Method: ', key, "\n")
                 visualize_score(cf_vae, pred_model, x_sample, d)
                 continue                      
 
             for i in range(10):
-                if case==0:
+                if case == 0:
                     cf_val.append( validity_score(cf_vae, pred_model, val_dataset, 0, sample_range) )
-                if case==1:
+                if case == 1:
                     cf_val.append( bnlearn_causal_graph_score(cf_vae, pred_model, val_dataset, normalise_weights, d, scm_model, constraint_nodes, 1, 0, sample_range) )
-                if case==2:
+                if case == 2:
                     cf_val.append( func_approx_score(cf_vae, pred_model, val_dataset, normalise_weights, 0, sample_range) )
-                elif case==3:
+                elif case == 3:
                     val, inval= bnlearn_causal_score(cf_vae, pred_model, val_dataset, d, normalise_weights, offset, scm_model, constraint_nodes, 0, sample_range)
                     cf_val.append( 2*100*np.array(val)*np.array(inval)/(np.array(val)+np.array(inval)) )
-                elif case==4:
+                elif case == 4:
                      cf_val.append( bnlearn_causal_graph_score(cf_vae, pred_model, val_dataset, normalise_weights, d, scm_model, constraint_nodes, 0, 0, sample_range) )
-                elif case==5:
+                elif case == 5:
                     cf_val.append( proximity_score(cf_vae, pred_model, val_dataset, d, mad_feature_weights, 0, 0, sample_range) )
-                elif case==6:
+                elif case == 6:
                     cf_val.append( proximity_score(cf_vae, pred_model, val_dataset, d, mad_feature_weights, 1, 0, sample_range) )
-                elif case==7:
+                elif case == 7:
                     cf_val.append( im_score(cf_vae, pred_model, val_dataset, d, normalise_weights, auto_encoder_models, div_case, 0, sample_range) ) 
                     
         print(key)
         
-        final_res[key]= cf_val
-        cf_val= np.mean( np.array(cf_val), axis=0 )
-        if case==0:
+        final_res[key] = cf_val
+        cf_val = np.mean( np.array(cf_val), axis=0 )
+        if case == 0:
             plt.title('Target Class Valid CF', fontsize=fsize)
             plt.xlabel('Total Counterfactuals requested per data point', fontsize=fsize)
             plt.ylabel('Percentage of valid CF w.r.t. ML Classifier',  fontsize=fsize)
-        elif case==1:
+        elif case == 1:
             plt.title('Causal Edge Distribution Valid CF', fontsize=fsize)
             plt.xlabel('Total counterfactuals requested per data point', fontsize=fsize)
             plt.ylabel('Likelihood for known causal edges distribution', fontsize=fsize)
-        elif case==2:
+        elif case == 2:
             plt.title('Causal Edge Function Valid CF', fontsize=fsize)
             plt.xlabel('Total counterfactuals requested per data point', fontsize=fsize)
             plt.ylabel('L1 norm for known causal edge function', fontsize=fsize)
-        elif case==3:
+        elif case == 3:
             plt.title('Constraint Valid CF', fontsize=fsize)
             plt.xlabel('Total counterfactuals requested per data point', fontsize=fsize)
             plt.ylabel('Percentage of CF satisfying Constraint', fontsize=fsize)
@@ -1853,25 +1875,25 @@ def compute_eval_metrics_sangiovese( methods, base_model_dir, encoded_size, pred
             plt.title('Causal Graph Score', fontsize=14)
             plt.xlabel('Total counterfactuals requested per data point', fontsize=14)
             plt.ylabel('Likelihood', fontsize=14)
-        elif case==5:
+        elif case == 5:
             plt.title('Continuous Proximity Score', fontsize=14)
             plt.xlabel('Total counterfactuals requested per data point', fontsize=14)
             plt.ylabel('Total change in continuous features ', fontsize=14)
-        elif case==6:
+        elif case == 6:
             plt.title('Categorical Proximity Score', fontsize=14)
             plt.xlabel('Total counterfactuals requested per data point', fontsize=14)
             plt.ylabel('Total change in categorical features', fontsize=14)
                     
-        if count==0:
+        if count == 0:
             low = min(cf_val)
             high = max(cf_val)
         else:
-            if low>min(cf_val):
-                low=min(cf_val)
-            elif high<max(cf_val):
-                high=max(cf_val)
+            if low > min(cf_val):
+                low = min(cf_val)
+            elif high < max(cf_val):
+                high = max(cf_val)
 
-        if case ==0 or case ==3:
+        if case == 0 or case == 3:
             plt.ylim(0,100)
         else:
             plt.ylim([np.ceil(low-0.5*(high-low)), np.ceil(high+0.5*(high-low))])        

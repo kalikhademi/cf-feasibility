@@ -1,11 +1,11 @@
-#Important Classes
+# Important Classes
 from scripts.dataloader import DataLoader
 from scripts.vae_model import CF_VAE
 from scripts.blackboxmodel import BlackBox
 from scripts.evaluation_functions import *
 from scripts.helpers import *
 
-#Normie stuff
+# Normie stuff
 import sys
 import random
 import pandas as pd
@@ -13,7 +13,7 @@ import numpy as np
 import json
 import argparse
 
-#Pytorch
+# Pytorch
 import torch
 import torch.utils.data
 from torch import nn, optim
@@ -22,29 +22,27 @@ from torchvision import datasets, transforms
 from torchvision.utils import save_image
 from torch.autograd import Variable
 
-#Seed for repoduability
+# Seed for repoduability
 torch.manual_seed(10000000)
 
 import itertools
 def flip(items, ncol):
     return itertools.chain(*[items[i::ncol] for i in range(ncol)])
 
-#Main dicionary to store the results
-res={}
-res['bn1']={}
-res['adult']={}
-res['sangiovese']={}
-
+# Main dicionary to store the results
+res = {}
+res['bn1'] = {}
+res['adult'] = {}
+res['sangiovese'] = {}
 
 '''
 BN1 Section
 '''
 
-
 base_data_dir='data/'
 base_model_dir='models/'
 dataset_name= 'bn1'
-dataset= pd.read_csv(base_data_dir+dataset_name+'.csv')
+dataset= pd.read_csv(base_data_dir + dataset_name + '.csv')
 dataset.drop(['Unnamed: 0'], axis=1, inplace=True)  
 params= {'dataframe':dataset.copy(), 'continuous_features':['x1','x2','x3'], 'outcome_name':'y'}
 d = DataLoader(params)
